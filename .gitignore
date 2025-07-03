@@ -1,21 +1,220 @@
-# the composer package lock file and install directory
-# Commit your application's lock file http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# /composer.lock
-/fuel/vendor
+from dataclasses import dataclass
 
-# the fuelphp document
-/docs/
+#Variáveis Globais
+dia_atual_sistema = 1
+livros = []
+usuarios = []
+emprestimos = []
 
-# you may install these packages with `oil package`.
-# http://fuelphp.com/docs/packages/oil/package.html
-# /fuel/packages/auth/
-# /fuel/packages/email/
-# /fuel/packages/oil/
-# /fuel/packages/orm/
-# /fuel/packages/parser/
+VALOR_MULTA_POR_DIA = 1  çç
 
-# dynamically generated files
-/fuel/app/logs/*/*/*
-/fuel/app/cache/*/*
-/fuel/app/config/crypt.php
+#Dataclasses
+@dataclass
+class Livro:
+    codigo: str
+    titulo: str
+    autor: str
+    ano: int
+    genero: str
+    quantidade_total: int
+    quantidade_disponivel: int
+
+@dataclass
+class Usuario:
+    id_usuario: str
+    nome: str
+    tipo: str  #aluno ou professor
+
+@dataclass
+class Emprestimo:
+    id_usuario: str
+    codigo_livro: str
+    dia_emprestimo: int
+    dia_devolucao_prevista: int
+    dia_devolucao_efetiva: int = None
+    status: str = "ativo"  #ativo" ou devolvido
+
+#Menu Principal
+def menu_principal():
+    global dia_atual_sistema
+
+    while True:
+        print("Sistema de Biblioteca ")
+        print("Dia atual do sistema:", dia_atual_sistema)
+        print("1. Gerenciar Livros")
+        print("2. Gerenciar Usuários")
+        print("3. Realizar Empréstimo")
+        print("4. Realizar Devolução")
+        print("5. Relatórios")
+        print("6. Gerenciar Tempo")
+        print("7. Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            menu_gerenciar_livros()
+        elif opcao == "2":
+            menu_gerenciar_usuarios()
+        elif opcao == "3":
+            realizar_emprestimo()
+        elif opcao == "4":
+            realizar_devolucao()
+        elif opcao == "5":
+            menu_relatorios()
+        elif opcao == "6":
+            dia_atual_sistema = menu_gerenciar_tempo(dia_atual_sistema)
+        elif opcao == "7":
+            print("Saindo do sistema.")
+            break
+        else:
+            print("Opção inválida.")
+
+#Menu de Tempo
+def menu_gerenciar_tempo(dia_sistema_atual_param):
+    while True:
+        print("Gerenciar Tempo ")
+        print(f"Dia Atual do Sistema: {dia_sistema_atual_param}")
+        print("1. Avançar 1 dia")
+        print("2. Avançar 7 dias (1 semana)")
+        print("3. Avançar N dias")
+        print("4. Consultar dia atual")
+        print("5. Voltar ao Menu Principal")
+
+        opcao_tempo = input("Escolha uma opção: ")
+
+        if opcao_tempo == "1":
+            dia_sistema_atual_param += 1
+        elif opcao_tempo == "2":
+            dia_sistema_atual_param += 7
+        elif opcao_tempo == "3":
+            try:
+                n_dias = int(input("Quantos dias deseja avançar?"))
+                if n_dias > 0:
+                    dia_sistema_atual_param += n_dias
+                else:
+                    print("Número deve ser positivo.")
+            except ValueError:
+                print("Entrada inválida.")
+        elif opcao_tempo == "4":
+            print(f"Dia atual: {dia_sistema_atual_param}")
+        elif opcao_tempo == "5":
+            break
+        else:
+            print("Opção inválida.")
+    return dia_sistema_atual_param
+
+#Menu Gerenciar Livros
+def menu_gerenciar_livros():
+    while True:
+        print("Gerenciar Livros ")
+        print("1. Cadastrar Novo Livro")
+        print("2. Listar Todos os Livros")
+        print("3. Buscar Livro")
+        print("4. Voltar ao Menu Principal")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            cadastrar_livro()
+        elif opcao == "2":
+            listar_livros()
+        elif opcao == "3":
+            buscar_livro()
+        elif opcao == "4":
+            break
+        else:
+            print("Opção inválida.")
+
+def cadastrar_livro():
+    print("Cadastrar Novo Livro ")
+    codigo = input("Código do livro (único): ").strip()
+
+    # Verificar se o código já existe
+    for livro in livros:
+        if livro.codigo == codigo:
+            print("Erro: Já existe um livro com esse código.")
+            return
+
+    titulo = input("Título: ").strip()
+    autor = input("Autor: ").strip()
+    try:
+        ano = int(input("Ano de publicação: "))
+    except ValueError:
+        print("Erro: Ano deve ser um número.")
+        return
+
+    genero = input("Gênero: ").strip()
+    try:
+        quantidade_total = int(input("Quantidade total de exemplares: "))
+        if quantidade_total <= 0:
+            print("Erro: A quantidade deve ser maior que zero.")
+            return
+    except ValueError:
+        print("Erro: Quantidade deve ser um número.")
+        return
+
+    novo_livro = Livro(
+        codigo=codigo,
+        titulo=titulo,
+        autor=autor,
+        ano=ano,
+        genero=genero,
+        quantidade_total=quantidade_total,
+        quantidade_disponivel=quantidade_total
+    )
+
+    livros.append(novo_livro)
+    print ("Livro '{titulo}' cadastrado com sucesso.")
+
+def listar_livros():
+    print("Lista de Livros ")
+    if not livros:
+        print("Nenhum livro cadastrado.")
+        return
+
+    for livro in livros:
+        print(f"\nCódigo: {livro.codigo}")
+        print(f"Título: {livro.titulo}")
+        print(f"Autor: {livro.autor}")
+        print(f"Ano: {livro.ano}")
+        print(f"Gênero: {livro.genero}")
+        print(f"Quantidade Total: {livro.quantidade_total}")
+        print(f"Disponível: {livro.quantidade_disponivel}")
+
+def buscar_livro():
+    print(" Buscar Livro ")
+    termo = input("Digite o código, título ou autor do livro: ").strip().lower()
+    encontrados = []
+
+    for livro in livros:
+        if (termo in livro.codigo.lower() or
+            termo in livro.titulo.lower() or
+            termo in livro.autor.lower()):
+            encontrados.append(livro)
+
+    if encontrados:
+        print(f"\n{len(encontrados)} livro(s) encontrado(s):")
+        for livro in encontrados:
+            print(f"\nCódigo: {livro.codigo}")
+            print(f"Título: {livro.titulo}")
+            print(f"Autor: {livro.autor}")
+            print(f"Ano: {livro.ano}")
+            print(f"Gênero: {livro.genero}")
+            print(f"Disponível: {livro.quantidade_disponivel}")
+    else:
+        print("Nenhum livro encontrado com esse termo.")
+
+def menu_gerenciar_usuarios():
+    print("Gerenciar Usuários ")
+    
+def realizar_emprestimo():
+    print("Realizar Empréstimo ")
+
+def realizar_devolucao():
+    print("Realizar Devolução ")
+    
+def menu_relatorios():
+    print("Relatórios ")
+
+#Iniciar Sistema
+menu_principal()
